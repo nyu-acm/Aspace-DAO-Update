@@ -28,16 +28,20 @@ func main() {
 	repPntr := flag.Int("repository", 0, "the repository")
 	flag.Parse()
 
+	//create a logfile and writer object
 	logFile, err := os.Create(fmt.Sprintf("logfile-%d.txt", *repPntr))
 	checkPanic(err)
 	defer logFile.Close()
 	logWriter := bufio.NewWriter(logFile)
 
+	//get a list of doas in the repository from the Aspace API
 	daos, err := aspace.GetDigitalObjectsByRepositoryId(*repPntr)
 	checkPanic(err)
 
+	//iterate through the daos
 	for _, daoId := range daos {
 
+		//request a dao from the aspace API
 		dao, err := aspace.GetDigitalObject(*repPntr, daoId)
 		checkPanic(err)
 
@@ -55,9 +59,12 @@ func main() {
 				}
 			}
 
+			//check to see if the dao should be updated
 			if update == true {
 				fmt.Println("Updating", dao.URI)
+				// post the updated dao to aspace
 				updateResponse, err := aspace.PostDigitalObject(*repPntr, daoId, dao)
+				//log any errors
 				if err != nil {
 					logWriter.WriteString(dao.URI + "\t" + err.Error())
 					logWriter.Flush()
